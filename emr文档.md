@@ -26,7 +26,9 @@ if [ $user_id -ne 0 ];then
     exit 9
 fi
 ```
+
 其次是在弹性MR刚创建时不能直接进行下一步，需要等待弹性MR完全创建成功后继续执行，创建的过程可能会持续6-9分钟，代码如下。
+
 ````bash
 ... ...
 status=`python emrdemo.py -a EmrDescribeCluster`
@@ -37,16 +39,21 @@ do
 done
 ... ...
 ```
+
 第三是ssh连接及执行远程命令问题。在远程拷贝和远程提交任务时，scp/ssh每次都是首次连接，那么就得需要authenticity，会提示用户是否信任该主机，一行命令不足以完成这个操作。但是scp/ssh如果加-o StrictHostKeyChecking =no就会很优雅的避开了这个认证。从而完成操作。
+
 并且scp/ssh本身只支持在交互式输入密码，但是我们必须得通过命令行传参的形式来输入密码，那怎么办呢？兵来将挡，一种办法可以通过第三方工具sshpass来实现，这个工具需要额外安装，附件中会有sshpass安装过程，当然还有其他的办法，以后慢慢探究。代码格式如下。
+
 ````bash
 ... ...
 $sshpass -p"$emrPass" scp -o StrictHostKeyChecking=no $jar_name $submit_name  root@$emrIp:$emr_path
 $sshpass -p"$emrPass" ssh -tt -o StrictHostKeyChecking=no root@"$emrIp" chmod 777 $jar_name $emr_path/ $submit_name
 ... ...
 ```
+
 在上面命令代码中ssh 后还跟了一个参数 -tt ，这个参数的主要作用是提供一个远程服务器的虚拟终端tty来执行远程命令，否则ssh 执行远程命令是会失败的，尤其是sudo命令。
 最后在每次任务提交后，会不断获取任务的运行状态，直至任务运行结束才会进入下一步操作。
+
 ````bash
 ... ...
 while true ;do
@@ -57,7 +64,9 @@ while true ;do
 done
 ... ...
 ```
+
 ###执行单元
+
 执行单元贯穿于整个程序的始末。用于创建MR集群，获取MR状态，获取MR ip，销毁MR，更像是一个工具，随用随执行。下面来说一下脚本的具体内容。
 
 引入云API入口模块
@@ -67,15 +76,6 @@ done
 - 接口请求域名：emr.api.qcloud.com
 - 接口输入参数：[参考见附件1](emr文档.md#附件1)  
 - 公共输入参数：[参考见附件2](emr文档.md#附件2)
-
-
-
-
-
-
-
-
-
 
 
 
