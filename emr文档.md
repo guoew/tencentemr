@@ -1,22 +1,22 @@
-###Welcome to use MarkDown
-##设计思路
+### Welcome to use MarkDown
+## 设计思路
 * 创建弹性MR集群  
 * 远程拷贝jar包
 * 提交任务到弹性MR集群
 * 任务结束后销毁弹性MR集群
 
-##程序流程
-![流程图](C:\Users\guoew\Desktop\ald\整理文档\tencentemr\img\lc.png)
-##程序结构
-![结构图](C:\Users\guoew\Desktop\ald\整理文档\tencentemr\img\jg.png)
+## 程序流程
+![流程图](img/lc.png)
+## 程序结构
+![结构图](img/jg.png)
 
     结构说明：
         控制流单元：整个程序的主线也是程序的入口。用于管理控制各个模块的运行，包括拷贝jar包到MR及任务提交
         执行单元：贯穿整个程序的始末。主要用于创建MR，获取MR状态，获取MR ip，销毁MR
         监控单元：主要用于对提交的任务的监控。开始于任务提交，与控制流单元同时结束。并且如果任务两小时未结束，强制退出控制流单元并销毁MR。
 
-##模块分析
-###控制流单元
+## 模块分析
+### 控制流单元
 控制流单元作为程序的主线，主要负责调度执行单元，监控单元的运行及任务的提交。具体执行单元和监控单元的运行原理会在这两个模块做详细说明，在控制流单元需要注意的有四点。
 首先是必须以root身份来运行脚本，因为一些命令或文件除root之外的用户不能够很方便的操作，在脚本中下面这段代码说明了这一点。
 ```bash
@@ -29,7 +29,7 @@ fi
 
 其次是在弹性MR刚创建时不能直接进行下一步，需要等待弹性MR完全创建成功后继续执行，创建的过程可能会持续6-9分钟，代码如下。
 
-````bash
+```bash
 ... ...
 status=`python emrdemo.py -a EmrDescribeCluster`
 while [ $status -ne 2 ]
@@ -44,7 +44,7 @@ done
 
 并且scp/ssh本身只支持在交互式输入密码，但是我们必须得通过命令行传参的形式来输入密码，那怎么办呢？兵来将挡，一种办法可以通过第三方工具sshpass来实现，这个工具需要额外安装，附件中会有sshpass安装过程，当然还有其他的办法，以后慢慢探究。代码格式如下。
 
-````bash
+```bash
 ... ...
 $sshpass -p"$emrPass" scp -o StrictHostKeyChecking=no $jar_name $submit_name  root@$emrIp:$emr_path
 $sshpass -p"$emrPass" ssh -tt -o StrictHostKeyChecking=no root@"$emrIp" chmod 777 $jar_name $emr_path/ $submit_name
@@ -54,7 +54,7 @@ $sshpass -p"$emrPass" ssh -tt -o StrictHostKeyChecking=no root@"$emrIp" chmod 77
 在上面命令代码中ssh 后还跟了一个参数 -tt ，这个参数的主要作用是提供一个远程服务器的虚拟终端tty来执行远程命令，否则ssh 执行远程命令是会失败的，尤其是sudo命令。
 最后在每次任务提交后，会不断获取任务的运行状态，直至任务运行结束才会进入下一步操作。
 
-````bash
+```bash
 ... ...
 while true ;do
         status=$($sshpass  -p"$emrPass" ssh -tt root@$emrIp "/usr/local/service/hadoop/bin/yarn application -list"  | awk '/^application/{print $2,$1,$6}')
@@ -65,7 +65,7 @@ done
 ... ...
 ```
 
-###执行单元
+### 执行单元
 
 执行单元贯穿于整个程序的始末。用于创建MR集群，获取MR状态，获取MR ip，销毁MR，更像是一个工具，随用随执行。下面来说一下脚本的具体内容。
 
@@ -81,7 +81,7 @@ done
 
 
 ## 附件1 
-###公共接口参数
+### 公共接口参数
 
 |参数名称	|是否必选|	类型	|描述|
 |----|----|----|----|
@@ -119,8 +119,8 @@ done
 |SupportHA	|是	|uint|	是否支持高可用|
 
 
-##附件2
-###公共输入参数
+## 附件2
+### 公共输入参数
 |名称	|类型	|描述	|必选|
 |----|----|----|----|
 |Action	|String	|接口指令的名称，例如: DescribeInstances|	是|
